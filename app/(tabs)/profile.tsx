@@ -1,152 +1,99 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import React from "react";
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
+import { useRouter } from "expo-router";
+import { signOut } from "firebase/auth";
+import { auth } from "../../src/config/firebase";
+import { Ionicons } from "@expo/vector-icons";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ProfileScreen() {
   const router = useRouter();
 
-  const handleLogout = () => {
-    // TODO: Implement logout logic
-    router.replace('/auth/login' as any);
+  const handleLogout = async () => {
+    Alert.alert("Đăng xuất", "Bạn có chắc chắn muốn đăng xuất?", [
+      {
+        text: "Hủy",
+        style: "cancel",
+      },
+      {
+        text: "Đăng xuất",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await signOut(auth);
+            router.replace("/(auth)/login");
+          } catch (error) {
+            console.error("Error signing out:", error);
+            Alert.alert("Error", "Could not sign out. Please try again.");
+          }
+        },
+      },
+    ]);
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <Stack.Screen options={{ title: 'Profile' }} />
-      
+    <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
       <View style={styles.header}>
-        <View style={styles.avatarContainer}>
-          <Ionicons name="person-circle" size={80} color="#007AFF" />
-        </View>
-        <Text style={styles.name}>John Doe</Text>
-        <Text style={styles.email}>john.doe@example.com</Text>
+        <Ionicons name="person-circle-outline" size={80} color="#4169E1" />
+        <Text style={styles.email}>{auth.currentUser?.email}</Text>
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Settings</Text>
-        
+      <View style={styles.content}>
         <TouchableOpacity style={styles.menuItem}>
-          <Ionicons name="language" size={24} color="#666" />
-          <Text style={styles.menuItemText}>Language Settings</Text>
-          <Ionicons name="chevron-forward" size={24} color="#666" />
+          <Ionicons name="person-outline" size={24} color="#4169E1" />
+          <Text style={styles.menuText}>Thông tin cá nhân</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.menuItem}>
-          <Ionicons name="notifications" size={24} color="#666" />
-          <Text style={styles.menuItemText}>Notifications</Text>
-          <Ionicons name="chevron-forward" size={24} color="#666" />
+          <Ionicons name="settings-outline" size={24} color="#4169E1" />
+          <Text style={styles.menuText}>Cài đặt</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem}>
-          <Ionicons name="cloud-upload" size={24} color="#666" />
-          <Text style={styles.menuItemText}>Backup & Restore</Text>
-          <Ionicons name="chevron-forward" size={24} color="#666" />
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Ionicons name="log-out-outline" size={24} color="#FF3B30" />
+          <Text style={styles.logoutText}>Đăng xuất</Text>
         </TouchableOpacity>
       </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>About</Text>
-        
-        <TouchableOpacity style={styles.menuItem}>
-          <Ionicons name="information-circle" size={24} color="#666" />
-          <Text style={styles.menuItemText}>App Information</Text>
-          <Ionicons name="chevron-forward" size={24} color="#666" />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.menuItem}>
-          <Ionicons name="help-circle" size={24} color="#666" />
-          <Text style={styles.menuItemText}>Help & Support</Text>
-          <Ionicons name="chevron-forward" size={24} color="#666" />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.menuItem}>
-          <Ionicons name="star" size={24} color="#666" />
-          <Text style={styles.menuItemText}>Rate the App</Text>
-          <Ionicons name="chevron-forward" size={24} color="#666" />
-        </TouchableOpacity>
-      </View>
-
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Ionicons name="log-out" size={24} color="#FF3B30" />
-        <Text style={styles.logoutButtonText}>Log Out</Text>
-      </TouchableOpacity>
-    </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   header: {
-    alignItems: 'center',
+    alignItems: "center",
     padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-    backgroundColor: '#2563eb',
-    paddingTop: 48,
-    paddingBottom: 16,
-    paddingHorizontal: 16,
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
-  avatarContainer: {
-    marginBottom: 10,
-  },
-  name: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 5,
-    color: '#222',
   },
   email: {
     fontSize: 16,
-    color: '#666',
+    color: "#333",
+    marginTop: 10,
   },
-  section: {
+  content: {
     padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-    backgroundColor: '#fff',
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 15,
-    color: '#222',
   },
   menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
   },
-  menuItemText: {
-    flex: 1,
-    fontSize: 16,
+  menuText: {
     marginLeft: 15,
-    color: '#222',
+    fontSize: 16,
+    color: "#333",
   },
   logoutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 15,
     marginTop: 20,
   },
-  logoutButtonText: {
-    color: '#FF3B30',
+  logoutText: {
+    marginLeft: 15,
     fontSize: 16,
-    fontWeight: 'bold',
-    marginLeft: 10,
+    color: "#FF3B30",
   },
-  headerTitle: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    flex: 1,
-  },
-}); 
+});

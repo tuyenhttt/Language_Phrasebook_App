@@ -1,37 +1,77 @@
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
-import { useState } from 'react';
-import { Phrase } from './types';
-
-const TOPICS = ['Greetings', 'Food', 'Travel', 'Shopping'];
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
+import { Stack, useRouter } from "expo-router";
+import { useState, useEffect } from "react";
+import { addPhrase, getCategories, Category } from "./services/phraseService";
 
 export default function AddPhraseScreen() {
   const router = useRouter();
-  const [topic, setTopic] = useState(TOPICS[0]);
+  const [topics, setTopics] = useState<Category[]>([]);
+  const [selectedTopic, setSelectedTopic] = useState<string>("");
   const [showTopicList, setShowTopicList] = useState(false);
-  const [phrase_native, setPhraseNative] = useState('');
-  const [phrase_translation, setPhraseTranslation] = useState('');
-  const [phonetic, setPhonetic] = useState('');
-  const [is_favorite, setIsFavorite] = useState(false);
+  const [phrase_native, setPhraseNative] = useState("");
+  const [phrase_translation, setPhraseTranslation] = useState("");
+  const [phonetic, setPhonetic] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleSave = () => {
-    // TODO: Implement saving the phrase
-    const newPhrase: Phrase = {
-      id: Date.now(),
-      topic,
-      phrase_native,
-      phrase_translation,
-      phonetic: phonetic || undefined,
-      is_favorite,
-      created_at: new Date(),
+  useEffect(() => {
+    const loadTopics = async () => {
+      try {
+        const categories = await getCategories();
+        setTopics(categories);
+        if (categories.length > 0) {
+          setSelectedTopic(categories[0].title);
+        }
+      } catch (error) {
+        console.error("Error loading topics:", error);
+      } finally {
+        setIsLoading(false);
+      }
     };
-    // For now, just go back
-    router.back();
+
+    loadTopics();
+  }, []);
+
+  const handleSave = async () => {
+    if (!phrase_native || !phrase_translation || !selectedTopic) {
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await addPhrase({
+        category: selectedTopic,
+        vietnamese: phrase_native,
+        english: phrase_translation,
+        pronunciation: phonetic || undefined,
+      });
+      router.back();
+    } catch (error) {
+      console.error("Error saving phrase:", error);
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <Text>Loading topics...</Text>
+      </View>
+    );
+  }
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={styles.container}
     >
       {/* Android-style AppBar */}
@@ -40,8 +80,10 @@ export default function AddPhraseScreen() {
           <Text style={styles.appBarAction}>Cancel</Text>
         </TouchableOpacity>
         <Text style={styles.appBarTitle}>Add Phrase</Text>
-        <TouchableOpacity onPress={handleSave}>
-          <Text style={styles.appBarAction}>Save</Text>
+        <TouchableOpacity onPress={handleSave} disabled={isSaving}>
+          <Text style={[styles.appBarAction, isSaving && { opacity: 0.5 }]}>
+            Save
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -53,20 +95,30 @@ export default function AddPhraseScreen() {
           onPress={() => setShowTopicList(!showTopicList)}
           activeOpacity={0.7}
         >
-          <Text style={styles.selectInputText}>{topic}</Text>
+          <Text style={styles.selectInputText}>{selectedTopic}</Text>
         </TouchableOpacity>
         {showTopicList && (
           <View style={styles.topicList}>
-            {TOPICS.map((t) => (
+            {topics.map((topic) => (
               <TouchableOpacity
-                key={t}
+                key={topic.id}
                 style={styles.topicListItem}
                 onPress={() => {
-                  setTopic(t);
+                  setSelectedTopic(topic.title);
                   setShowTopicList(false);
                 }}
               >
-                <Text style={[styles.topicListItemText, t === topic && { color: '#2563eb', fontWeight: 'bold' }]}>{t}</Text>
+                <Text
+                  style={[
+                    styles.topicListItemText,
+                    topic.title === selectedTopic && {
+                      color: "#2563eb",
+                      fontWeight: "bold",
+                    },
+                  ]}
+                >
+                  {topic.title}
+                </Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -109,62 +161,62 @@ export default function AddPhraseScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f6f7fa',
+    backgroundColor: "#f6f7fa",
   },
   appBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#fff',
-    paddingTop: Platform.OS === 'android' ? 16 : 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#fff",
+    paddingTop: Platform.OS === "android" ? 16 : 16,
     paddingHorizontal: 16,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: "#e0e0e0",
     elevation: 2,
   },
   appBarTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#222',
+    fontWeight: "bold",
+    color: "#222",
   },
   appBarAction: {
-    color: '#2563eb',
+    color: "#2563eb",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   form: {
     padding: 20,
   },
   label: {
     fontSize: 15,
-    fontWeight: 'bold',
-    color: '#444',
+    fontWeight: "bold",
+    color: "#444",
     marginBottom: 6,
     marginTop: 18,
   },
   selectInput: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: "#e0e0e0",
     paddingVertical: 14,
     paddingHorizontal: 14,
     marginBottom: 4,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   selectInputText: {
     fontSize: 16,
-    color: '#222',
+    color: "#222",
   },
   topicList: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: "#e0e0e0",
     marginBottom: 8,
     marginTop: 2,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   topicListItem: {
     paddingVertical: 12,
@@ -172,16 +224,16 @@ const styles = StyleSheet.create({
   },
   topicListItemText: {
     fontSize: 16,
-    color: '#222',
+    color: "#222",
   },
   input: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: "#e0e0e0",
     paddingVertical: 14,
     paddingHorizontal: 14,
     fontSize: 16,
     marginBottom: 4,
   },
-}); 
+});

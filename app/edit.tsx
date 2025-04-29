@@ -1,55 +1,78 @@
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { useState, useEffect } from 'react';
-import { Phrase } from './types';
-import { phrasesByTheme } from './data/phrases';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import { useState, useEffect } from "react";
+import { Phrase } from "./types";
+import { getPhrases, updatePhrase } from "./services/phraseService";
 
-const TOPICS = ['Greetings', 'Food', 'Travel', 'Shopping'];
-
-// Mock function to get phrase by id
-const getPhraseById = (id: number): Phrase => ({
-  id,
-  topic: 'Greetings',
-  phrase_native: 'こんにちは',
-  phrase_translation: 'Hello',
-  phonetic: 'Konnichiwa',
-  is_favorite: false,
-  created_at: new Date(),
-});
+const TOPICS = ["Greetings", "Food", "Travel", "Shopping"];
 
 export default function EditPhraseScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const phraseId = typeof params.id === 'string' ? parseInt(params.id, 10) : Number(params.id);
-  const themeId = typeof params.themeId === 'string' ? parseInt(params.themeId, 10) : Number(params.themeId);
+  const phraseId = params.id as string;
+  const themeId = params.themeId as string;
 
-  // Find the phrase to edit
-  const phrase = phrasesByTheme[themeId]?.find((p: Phrase) => p.id === phraseId);
-
-  // Load phrase data
-  const [topic, setTopic] = useState(phrase?.topic || TOPICS[0]);
+  const [topic, setTopic] = useState(TOPICS[0]);
   const [showTopicList, setShowTopicList] = useState(false);
-  const [phrase_native, setPhraseNative] = useState(phrase?.phrase_native || '');
-  const [phrase_translation, setPhraseTranslation] = useState(phrase?.phrase_translation || '');
-  const [phonetic, setPhonetic] = useState('');
+  const [phrase_native, setPhraseNative] = useState("");
+  const [phrase_translation, setPhraseTranslation] = useState("");
+  const [phonetic, setPhonetic] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const phrase = getPhraseById(phraseId);
-    setTopic(phrase.topic);
-    setPhraseNative(phrase.phrase_native);
-    setPhraseTranslation(phrase.phrase_translation);
-    setPhonetic(phrase.phonetic || '');
+    const loadPhrase = async () => {
+      try {
+        const phrases = await getPhrases();
+        const phrase = phrases.find((p) => p.id === phraseId);
+        if (phrase) {
+          setTopic(phrase.category);
+          setPhraseNative(phrase.vietnamese);
+          setPhraseTranslation(phrase.english);
+          setPhonetic(phrase.pronunciation || "");
+        }
+      } catch (error) {
+        console.error("Error loading phrase:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadPhrase();
   }, [phraseId]);
 
-  const handleSave = () => {
-    // TODO: Save changes to phrase (update in store/db)
-    // For now, just go back
-    router.back();
+  const handleSave = async () => {
+    try {
+      await updatePhrase(phraseId, {
+        category: topic,
+        vietnamese: phrase_native,
+        english: phrase_translation,
+        pronunciation: phonetic || undefined,
+      });
+      router.back();
+    } catch (error) {
+      console.error("Error saving phrase:", error);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={styles.container}
     >
       {/* Android-style AppBar */}
@@ -84,7 +107,14 @@ export default function EditPhraseScreen() {
                   setShowTopicList(false);
                 }}
               >
-                <Text style={[styles.topicListItemText, t === topic && { color: '#2563eb', fontWeight: 'bold' }]}>{t}</Text>
+                <Text
+                  style={[
+                    styles.topicListItemText,
+                    t === topic && { color: "#2563eb", fontWeight: "bold" },
+                  ]}
+                >
+                  {t}
+                </Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -127,62 +157,62 @@ export default function EditPhraseScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f6f7fa',
+    backgroundColor: "#f6f7fa",
   },
   appBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#fff',
-    paddingTop: Platform.OS === 'android' ? 16 : 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#fff",
+    paddingTop: Platform.OS === "android" ? 16 : 16,
     paddingHorizontal: 16,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: "#e0e0e0",
     elevation: 2,
   },
   appBarTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#222',
+    fontWeight: "bold",
+    color: "#222",
   },
   appBarAction: {
-    color: '#2563eb',
+    color: "#2563eb",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   form: {
     padding: 20,
   },
   label: {
     fontSize: 15,
-    fontWeight: 'bold',
-    color: '#444',
+    fontWeight: "bold",
+    color: "#444",
     marginBottom: 6,
     marginTop: 18,
   },
   selectInput: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: "#e0e0e0",
     paddingVertical: 14,
     paddingHorizontal: 14,
     marginBottom: 4,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   selectInputText: {
     fontSize: 16,
-    color: '#222',
+    color: "#222",
   },
   topicList: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: "#e0e0e0",
     marginBottom: 8,
     marginTop: 2,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   topicListItem: {
     paddingVertical: 12,
@@ -190,16 +220,16 @@ const styles = StyleSheet.create({
   },
   topicListItemText: {
     fontSize: 16,
-    color: '#222',
+    color: "#222",
   },
   input: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: "#e0e0e0",
     paddingVertical: 14,
     paddingHorizontal: 14,
     fontSize: 16,
     marginBottom: 4,
   },
-}); 
+});

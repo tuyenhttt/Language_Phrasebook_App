@@ -1,65 +1,93 @@
-import React from 'react';
-import { Tabs } from 'expo-router';
-import { Stack } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import React from "react";
+import { Tabs } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { TouchableOpacity } from "react-native";
+import { useRouter } from "expo-router";
+import { signOut } from "firebase/auth";
+import { auth } from "../../src/config/firebase";
 
-export default function RootLayout() {
-  return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-      }}
-    />
-  );
-}
+export default function TabLayout() {
+  const router = useRouter();
 
-export function TabLayout() {
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      router.replace("/(auth)/login");
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
+
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#007AFF',
-        tabBarInactiveTintColor: '#666',
+        headerStyle: {
+          backgroundColor: "#4169E1",
+        },
+        headerTintColor: "#fff",
+        tabBarActiveTintColor: "#4169E1",
+        tabBarInactiveTintColor: "#666",
         tabBarStyle: {
-          backgroundColor: '#fff',
+          backgroundColor: "#fff",
           borderTopWidth: 1,
-          borderTopColor: '#e0e0e0',
+          borderTopColor: "#e0e0e0",
         },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home" size={size} color={color} />
+          title: "Trang chủ",
+          headerShown: false,
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="home-outline" size={24} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="search"
+        name="explore"
         options={{
-          title: 'Search',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="search" size={size} color={color} />
+          title: "Khám phá",
+          headerTitle: "Khám phá",
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="compass-outline" size={24} color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="favorites"
         options={{
-          title: 'Favorites',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="star" size={size} color={color} />
+          title: "Yêu thích",
+          headerTitle: "Yêu thích",
+          headerShown: false,
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="heart-outline" size={24} color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person" size={size} color={color} />
+          title: "Tài khoản",
+          headerTitle: "Tài khoản",
+          headerShown: false,
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="person-outline" size={24} color={color} />
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="search"
+        options={{
+          href: null,
+          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
+        name="details"
+        options={{
+          href: null,
+          headerShown: false,
         }}
       />
     </Tabs>
