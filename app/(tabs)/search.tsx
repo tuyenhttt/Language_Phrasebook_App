@@ -1,65 +1,54 @@
-import { View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
-import { Phrase } from '../types';
-import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  FlatList,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
+import { useRouter } from "expo-router";
+import { getPhrases, Phrase } from "../../app/services/phraseService";
+import { Ionicons } from "@expo/vector-icons";
+import { useState, useEffect } from "react";
 
-// Temporary mock data
-const mockPhrases: Phrase[] = [
-  {
-    id: 1,
-    topic: 'Greetings',
-    phrase_native: 'こんにちは',
-    phrase_translation: 'Hello',
-    phonetic: 'Konnichiwa',
-    is_favorite: false,
-    created_at: new Date(),
-  },
-  {
-    id: 2,
-    topic: 'Greetings',
-    phrase_native: 'こんばんは',
-    phrase_translation: 'Good evening',
-    phonetic: 'Konbanwa',
-    is_favorite: false,
-    created_at: new Date(),
-  },
-  {
-    id: 3,
-    topic: 'Greetings',
-    phrase_native: 'もしもし',
-    phrase_translation: 'Hello',
-    phonetic: 'Moshi moshi',
-    is_favorite: false,
-    created_at: new Date(),
-  },
-  {
-    id: 4,
-    topic: 'Greetings',
-    phrase_native: 'やあ',
-    phrase_translation: 'Hello',
-    phonetic: 'Y',
-    is_favorite: false,
-    created_at: new Date(),
-  },
-];
-
-const notes: Record<number, string> = {
-  3: 'on the phone',
-  4: 'informal',
+// Nếu cần notes, hãy dùng Record<string, string> và id là string
+const notes: Record<string, string> = {
+  "3": "on the phone",
+  "4": "informal",
 };
 
 export default function SearchScreen() {
   const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filteredPhrases, setFilteredPhrases] = useState<Phrase[]>(mockPhrases);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [allPhrases, setAllPhrases] = useState<Phrase[]>([]);
+  const [filteredPhrases, setFilteredPhrases] = useState<Phrase[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPhrases = async () => {
+      setLoading(true);
+      try {
+        const phrases = await getPhrases();
+        setAllPhrases(phrases);
+        setFilteredPhrases(phrases);
+      } catch (error) {
+        setAllPhrases([]);
+        setFilteredPhrases([]);
+      }
+      setLoading(false);
+    };
+    fetchPhrases();
+  }, []);
 
   const handleSearch = (text: string) => {
     setSearchQuery(text);
-    const filtered = mockPhrases.filter(phrase => 
-      phrase.phrase_native.toLowerCase().includes(text.toLowerCase()) ||
-      phrase.phrase_translation.toLowerCase().includes(text.toLowerCase()) ||
-      (phrase.phonetic?.toLowerCase().includes(text.toLowerCase()) ?? false)
+    const filtered = allPhrases.filter(
+      (phrase) =>
+        phrase.vietnamese?.toLowerCase().includes(text.toLowerCase()) ||
+        phrase.english?.toLowerCase().includes(text.toLowerCase()) ||
+        (phrase.pronunciation?.toLowerCase().includes(text.toLowerCase()) ??
+          false)
     );
     setFilteredPhrases(filtered);
   };
@@ -67,12 +56,16 @@ export default function SearchScreen() {
   const renderPhraseItem = ({ item }: { item: Phrase }) => (
     <View style={styles.resultRow}>
       <View style={styles.resultLeft}>
-        <Text style={styles.phraseNative}>{item.phrase_native}</Text>
-        {item.phonetic && <Text style={styles.phonetic}>{item.phonetic}</Text>}
+        <Text style={styles.phraseNative}>{item.vietnamese}</Text>
+        {item.pronunciation && (
+          <Text style={styles.phonetic}>{item.pronunciation}</Text>
+        )}
       </View>
       <View style={styles.resultRight}>
-        <Text style={styles.phraseTranslation}>{item.phrase_translation}</Text>
-        {notes[item.id] && <Text style={styles.note}>( {notes[item.id]} )</Text>}
+        <Text style={styles.phraseTranslation}>{item.english}</Text>
+        {item.id && notes[item.id] && (
+          <Text style={styles.note}>( {notes[item.id]} )</Text>
+        )}
       </View>
     </View>
   );
@@ -81,7 +74,18 @@ export default function SearchScreen() {
     <View style={styles.container}>
       {/* Dark header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>{'Simple Language\nPhrasebook'}</Text>
+        <TouchableOpacity
+          style={{
+            marginRight: 12,
+            padding: 6,
+            borderRadius: 20,
+            backgroundColor: "rgba(255,255,255,0.08)",
+          }}
+          onPress={() => router.replace("/")}
+        >
+          <Ionicons name="arrow-back" size={24} color="#fff" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>{"Simple Language\nPhrasebook"}</Text>
         <TouchableOpacity style={styles.headerIcon} onPress={() => {}}>
           <Ionicons name="search" size={22} color="#fff" />
         </TouchableOpacity>
@@ -99,21 +103,31 @@ export default function SearchScreen() {
       </View>
       {/* Results */}
       <View style={styles.resultsContainer}>
-        <FlatList
-          data={filteredPhrases}
-          renderItem={renderPhraseItem}
-          keyExtractor={(item) => item.id.toString()}
-          keyboardShouldPersistTaps="handled"
-          ListEmptyComponent={
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyStateText}>
-                {searchQuery.length > 0 
-                  ? 'No phrases found'
-                  : 'Search for phrases to get started'}
-              </Text>
-            </View>
-          }
-        />
+        {loading ? (
+          <ActivityIndicator
+            size="large"
+            color="#4169E1"
+            style={{ marginTop: 40 }}
+          />
+        ) : (
+          <FlatList
+            data={filteredPhrases}
+            renderItem={renderPhraseItem}
+            keyExtractor={(item) =>
+              item.id?.toString() || Math.random().toString()
+            }
+            keyboardShouldPersistTaps="handled"
+            ListEmptyComponent={
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyStateText}>
+                  {searchQuery.length > 0
+                    ? "No phrases found"
+                    : "Search for phrases to get started"}
+                </Text>
+              </View>
+            }
+          />
+        )}
       </View>
     </View>
   );
@@ -122,94 +136,101 @@ export default function SearchScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   header: {
-    backgroundColor: '#222',
+    backgroundColor: "#4169E1",
     paddingTop: 48,
-    paddingBottom: 12,
-    paddingHorizontal: 18,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    paddingBottom: 18,
+    paddingHorizontal: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    shadowColor: "#4169E1",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
   },
   headerTitle: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
+    color: "#fff",
+    fontSize: 20,
+    fontWeight: "700",
     flex: 1,
-    lineHeight: 22,
+    textAlign: "center",
+    lineHeight: 26,
+    letterSpacing: 0.5,
   },
   headerIcon: {
     marginLeft: 10,
+    padding: 6,
   },
   searchBarContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     paddingHorizontal: 18,
     paddingVertical: 10,
     borderBottomWidth: 0,
   },
   searchBar: {
-    backgroundColor: '#f6f7fa',
+    backgroundColor: "#f6f7fa",
     borderRadius: 8,
     paddingVertical: 10,
     paddingHorizontal: 14,
     fontSize: 16,
     borderWidth: 0,
-    color: '#222',
+    color: "#222",
   },
   resultsContainer: {
     flex: 1,
-    backgroundColor: '#f0f1f4',
+    backgroundColor: "#f0f1f4",
     paddingHorizontal: 18,
     paddingTop: 8,
     borderBottomLeftRadius: 16,
     borderBottomRightRadius: 16,
   },
   resultRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: "#e0e0e0",
   },
   resultLeft: {
     flex: 1.2,
   },
   resultRight: {
     flex: 1,
-    alignItems: 'flex-end',
+    alignItems: "flex-end",
   },
   phraseNative: {
     fontSize: 17,
-    fontWeight: 'bold',
-    color: '#222',
+    fontWeight: "bold",
+    color: "#222",
   },
   phonetic: {
     fontSize: 14,
-    color: '#888',
+    color: "#888",
     marginTop: 2,
   },
   phraseTranslation: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#222',
+    fontWeight: "bold",
+    color: "#222",
   },
   note: {
     fontSize: 13,
-    color: '#888',
+    color: "#888",
     marginTop: 2,
-    textAlign: 'right',
+    textAlign: "right",
   },
   emptyState: {
     padding: 40,
-    alignItems: 'center',
+    alignItems: "center",
   },
   emptyStateText: {
     fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
+    color: "#666",
+    textAlign: "center",
   },
-}); 
+});

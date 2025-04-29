@@ -15,6 +15,7 @@ import {
   getPhrasesByCategory,
   Category,
   Phrase,
+  getPhrases,
 } from "../../app/services/phraseService";
 
 interface PhraseWithFavorite extends Phrase {
@@ -154,8 +155,8 @@ export default function TopicDetailScreen() {
         renderItem={({ item }) => (
           <View style={styles.card}>
             <View style={styles.cardLeft}>
-              <Text style={styles.translation}>{item.english}</Text>
-              <Text style={styles.native}>{item.vietnamese}</Text>
+              <Text style={styles.translation}>{item.vietnamese}</Text>
+              <Text style={styles.native}>{item.english}</Text>
               {item.pronunciation && (
                 <Text style={styles.pronunciation}>{item.pronunciation}</Text>
               )}
