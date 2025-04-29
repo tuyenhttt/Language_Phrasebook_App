@@ -1,89 +1,94 @@
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { Alert, Platform } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Phrase } from '../types';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useState } from 'react';
-
-const mockPhrases: Phrase[] = [
-  {
-    id: 1,
-    topic: 'Greetings',
-    phrase_native: 'Xin chào',
-    phrase_translation: 'Hello',
-    is_favorite: false,
-    created_at: new Date(),
-  },
-  {
-    id: 2,
-    topic: 'Greetings',
-    phrase_native: 'Chào buổi sáng',
-    phrase_translation: 'Good morning',
-    is_favorite: false,
-    created_at: new Date(),
-  },
-  {
-    id: 3,
-    topic: 'Greetings',
-    phrase_native: 'Chào buổi chiều',
-    phrase_translation: 'Good afternoon',
-    is_favorite: false,
-    created_at: new Date(),
-  },
-  {
-    id: 4,
-    topic: 'Greetings',
-    phrase_native: 'Chào buổi tối',
-    phrase_translation: 'Good evening',
-    is_favorite: false,
-    created_at: new Date(),
-  },
-  {
-    id: 5,
-    topic: 'Greetings',
-    phrase_native: 'Bạn có khoẻ không?',
-    phrase_translation: 'How are you?',
-    is_favorite: false,
-    created_at: new Date(),
-  },
-];
+import { themes, phrasesByTheme } from '../data/phrases';
 
 export default function TopicDetailScreen() {
-  const { id } = useLocalSearchParams();
+  const params = useLocalSearchParams();
+  const themeId = typeof params.id === 'string' ? parseInt(params.id, 10) : Number(params.id);
+  const theme = themes.find(t => t.id === themeId);
   const router = useRouter();
-  const [phrases, setPhrases] = useState<Phrase[]>(mockPhrases);
-  const [topicFavorite, setTopicFavorite] = useState(false);
-
+  
+  const [phrases, setPhrases] = useState<Phrase[]>(
+    themeId && phrasesByTheme[themeId] ? phrasesByTheme[themeId] : []
+  );
+  
   // Helper: are all phrases favorite?
   const allFavorite = phrases.length > 0 && phrases.every(p => p.is_favorite);
 
   const handleEdit = (phraseId: number) => {
-    router.push({ pathname: '/phrase/edit', params: { id: phraseId } } as any);
+    router.push({
+      pathname: "/edit",
+      params: { id: phraseId, themeId }
+    });
   };
 
   const handleDelete = (phraseId: number) => {
-    Alert.alert(
-      'Are you sure you want to delete this phrase?',
-      '',
-      [
-        { text: 'No', style: 'destructive' },
-        { text: 'Yes', onPress: () => setPhrases(phrases.filter(p => p.id !== phraseId)) },
-      ],
-      { cancelable: true }
-    );
+    if (Platform.OS === 'ios') {
+      Alert.alert(
+        'Are you sure you want to delete this phrase?',
+        '',
+        [
+          {
+            text: 'No',
+            style: 'cancel'
+          },
+          {
+            text: 'Yes',
+            onPress: () => setPhrases(phrases.filter(p => p.id !== phraseId)),
+            style: 'destructive'
+          }
+        ]
+      );
+    } else {
+      Alert.alert(
+        'Delete Phrase',
+        'Are you sure you want to delete this phrase?',
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel'
+          },
+          {
+            text: 'Delete',
+            onPress: () => setPhrases(phrases.filter(p => p.id !== phraseId)),
+            style: 'destructive'
+          }
+        ]
+      );
+    }
   };
 
   const handleToggleFavorite = (phraseId: number) => {
     setPhrases(phrases.map(p => p.id === phraseId ? { ...p, is_favorite: !p.is_favorite } : p));
   };
 
+  if (!theme) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.headerIconLeft} onPress={() => router.back()}>
+            <Ionicons name="arrow-back" size={26} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Theme not found</Text>
+        </View>
+        <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+          <Text>Theme not found</Text>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      {/* Blue header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.headerIconLeft} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={26} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Greetings</Text>
+        <Text style={styles.headerTitle}>{theme.title}</Text>
         <TouchableOpacity
           style={styles.headerIconRight}
           onPress={() => setPhrases(phrases.map(p => ({ ...p, is_favorite: !allFavorite })))}
@@ -91,7 +96,7 @@ export default function TopicDetailScreen() {
           <Ionicons name={allFavorite ? 'star' : 'star-outline'} size={26} color="#fff" />
         </TouchableOpacity>
       </View>
-      {/* Phrase list */}
+
       <FlatList
         data={phrases}
         keyExtractor={item => item.id.toString()}
@@ -104,13 +109,17 @@ export default function TopicDetailScreen() {
             </View>
             <View style={styles.cardActions}>
               <TouchableOpacity style={styles.iconBtn} onPress={() => handleEdit(item.id)}>
-                <MaterialIcons name="edit" size={22} color="#2563eb" />
+                <MaterialIcons name="edit" size={22} color="#4169E1" />
               </TouchableOpacity>
               <TouchableOpacity style={styles.iconBtn} onPress={() => handleDelete(item.id)}>
-                <MaterialIcons name="delete" size={22} color="#2563eb" />
+                <MaterialIcons name="delete" size={22} color="#4169E1" />
               </TouchableOpacity>
               <TouchableOpacity style={styles.iconBtn} onPress={() => handleToggleFavorite(item.id)}>
-                <Ionicons name={item.is_favorite ? 'star' : 'star-outline'} size={22} color="#2563eb" />
+                <Ionicons 
+                  name={item.is_favorite ? 'star' : 'star-outline'} 
+                  size={22} 
+                  color="#4169E1" 
+                />
               </TouchableOpacity>
             </View>
           </View>
@@ -129,7 +138,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#2563eb',
+    backgroundColor: '#4169E1',
     paddingTop: 48,
     paddingBottom: 16,
     paddingHorizontal: 16,
