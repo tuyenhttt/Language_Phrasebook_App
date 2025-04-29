@@ -79,8 +79,9 @@ export default function TabLayout() {
       <Tabs.Screen
         name="search"
         options={{
-          title: "Tìm kiếm",
+          title: "Search",
           headerShown: false,
+          tabBarButton: () => null,
         }}
       />
       <Tabs.Screen
