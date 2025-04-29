@@ -40,12 +40,12 @@ export default function FavoritesScreen() {
     <View style={styles.container}>
       {/* Blue header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.headerIconLeft} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={26} color="#fff" />
+        <TouchableOpacity style={styles.headerIcon} onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Simple Language Phrasebook</Text>
-        <TouchableOpacity style={styles.headerIconRight} onPress={() => router.push('/(tabs)/search' as any)}>
-          <Ionicons name="search" size={26} color="#fff" />
+        <TouchableOpacity style={styles.headerIcon} onPress={() => router.push('/(tabs)/search' as any)}>
+          <Ionicons name="search" size={24} color="#fff" />
         </TouchableOpacity>
       </View>
       <SectionList
@@ -76,30 +76,19 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#2563eb',
-    paddingTop: 48,
+    justifyContent: 'space-between',
+    backgroundColor: '#4169E1',
+    paddingTop: 16,
     paddingBottom: 16,
     paddingHorizontal: 16,
   },
-  headerIconLeft: {
-    position: 'absolute',
-    left: 16,
-    top: 48,
-    zIndex: 2,
-  },
-  headerIconRight: {
-    position: 'absolute',
-    right: 16,
-    top: 48,
-    zIndex: 2,
+  headerIcon: {
+    padding: 8,
   },
   headerTitle: {
-    color: '#fff',
+    color: 'white',
     fontSize: 18,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    flex: 1,
+    fontWeight: '600',
   },
   listContent: {
     padding: 18,

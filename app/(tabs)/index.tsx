@@ -1,88 +1,71 @@
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Topic } from '../types';
-import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
-
-const mockTopics: Topic[] = [
-  {
-    id: 1,
-    name: 'Greetings',
-    description: 'Basic greeting phrases',
-    created_at: new Date(),
-    updated_at: new Date(),
-  },
-  {
-    id: 2,
-    name: 'Food',
-    description: 'Common phrases for restaurants and food',
-    created_at: new Date(),
-    updated_at: new Date(),
-  },
-  {
-    id: 3,
-    name: 'Travel',
-    description: 'Useful phrases for traveling',
-    created_at: new Date(),
-    updated_at: new Date(),
-  },
-  {
-    id: 4,
-    name: 'Shopping',
-    description: 'Phrases for shopping',
-    created_at: new Date(),
-    updated_at: new Date(),
-  },
-];
-
-const topicIcons: Record<string, JSX.Element> = {
-  Greetings: <Ionicons name="chatbubble-ellipses" size={28} color="#2563eb" />, // speech bubble
-  Food: <MaterialIcons name="restaurant" size={28} color="#2563eb" />, // fork & knife
-  Travel: <FontAwesome5 name="plane" size={26} color="#2563eb" />, // airplane
-  Shopping: <MaterialIcons name="shopping-cart" size={28} color="#2563eb" />, // cart
-};
+import { themes } from '../data/phrases';
 
 export default function HomeScreen() {
+  const [showSearch, setShowSearch] = useState(false);
   const router = useRouter();
 
-  const renderTopicItem = ({ item }: { item: Topic }) => (
-    <TouchableOpacity
-      style={styles.topicCard}
-      onPress={() => router.push({ pathname: '/topic/[id]', params: { id: item.id } })}
-    >
-      <View style={styles.topicIcon}>{topicIcons[item.name] || <Ionicons name="folder" size={28} color="#2563eb" />}</View>
-      <Text style={styles.topicName}>{item.name}</Text>
-    </TouchableOpacity>
-  );
+  const handleThemePress = (themeId: number) => {
+    router.push({
+      pathname: "/details",
+      params: { id: themeId }
+    });
+  };
+
+  const handleFavoritePress = () => {
+    router.push('/(tabs)/favorites');
+  };
+
+  const handleAddPress = () => {
+    router.push('/add-phrase');
+  };
 
   return (
     <View style={styles.container}>
-      {/* Custom Blue Header */}
+      {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.headerIconLeft} onPress={() => router.push('/(tabs)/favorites' as any)}>
-          <Ionicons name="star" size={26} color="#fff" />
+        <TouchableOpacity style={styles.headerIcon} onPress={handleFavoritePress}>
+          <Ionicons name="star-outline" size={24} color="white" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Simple Language Phrasebook</Text>
-        <TouchableOpacity style={styles.headerIconRight} onPress={() => router.push('/(tabs)/search' as any)}>
-          <Ionicons name="search" size={26} color="#fff" />
+        <TouchableOpacity style={styles.headerIcon} onPress={() => router.push('/(tabs)/search' as any)}>
+          <Ionicons name="search" size={24} color="#fff" />
         </TouchableOpacity>
       </View>
 
-      {/* Topics List */}
-      <FlatList
-        data={mockTopics}
-        renderItem={renderTopicItem}
-        keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={styles.topicsList}
-        showsVerticalScrollIndicator={false}
-      />
+      {/* Search Bar */}
+      {showSearch && (
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search phrases..."
+            placeholderTextColor="#666"
+          />
+        </View>
+      )}
 
-      {/* Floating Add Button */}
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => router.push('/phrase/add' as any)}
-        activeOpacity={0.8}
-      >
-        <Ionicons name="add-circle-outline" size={48} color="#2563eb" />
+      {/* Body */}
+      <ScrollView style={styles.body}>
+        {themes.map((item) => (
+          <TouchableOpacity
+            key={item.id}
+            style={styles.themeItem}
+            onPress={() => handleThemePress(item.id)}
+          >
+            <View style={styles.themeContent}>
+              <Ionicons name={item.icon as any} size={24} color="#4169E1" />
+              <Text style={styles.themeTitle}>{item.title}</Text>
+            </View>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+
+      {/* FAB Button */}
+      <TouchableOpacity style={styles.fab} onPress={handleAddPress}>
+        <Ionicons name="add" size={24} color="white" />
       </TouchableOpacity>
     </View>
   );
@@ -96,67 +79,74 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#2563eb',
-    paddingTop: 48,
+    justifyContent: 'space-between',
+    backgroundColor: '#4169E1',
+    paddingTop: 16,
     paddingBottom: 16,
     paddingHorizontal: 16,
   },
-  headerIconLeft: {
-    position: 'absolute',
-    left: 16,
-    top: 48,
-    zIndex: 2,
-  },
-  headerIconRight: {
-    position: 'absolute',
-    right: 16,
-    top: 48,
-    zIndex: 2,
+  headerIcon: {
+    padding: 8,
   },
   headerTitle: {
-    color: '#fff',
+    color: 'white',
     fontSize: 18,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontWeight: '600',
+  },
+  searchContainer: {
+    padding: 16,
+    backgroundColor: '#f5f5f5',
+  },
+  searchInput: {
+    backgroundColor: 'white',
+    padding: 12,
+    borderRadius: 8,
+    fontSize: 16,
+  },
+  body: {
     flex: 1,
+    padding: 16,
   },
-  topicsList: {
-    paddingHorizontal: 16,
-    paddingTop: 24,
-    paddingBottom: 100,
+  themeItem: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    marginBottom: 12,
+    padding: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
-  topicCard: {
+  themeContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8f8f8',
-    paddingVertical: 18,
-    paddingHorizontal: 18,
-    borderRadius: 12,
-    marginBottom: 18,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
   },
-  topicIcon: {
-    marginRight: 18,
-  },
-  topicName: {
-    fontSize: 18,
-    fontWeight: '500',
-    color: '#222',
+  themeTitle: {
+    fontSize: 16,
+    marginLeft: 12,
+    color: '#333',
   },
   fab: {
     position: 'absolute',
-    right: 24,
-    bottom: 32,
-    backgroundColor: '#fff',
-    borderRadius: 32,
-    padding: 2,
+    right: 16,
+    bottom: 16,
+    backgroundColor: '#4169E1',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
     elevation: 4,
-    shadowColor: '#2563eb',
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
   },
-});
+}); 

@@ -1,43 +1,30 @@
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { useState, useEffect } from 'react';
-import { Phrase } from '../types';
+import { Stack, useRouter } from 'expo-router';
+import { useState } from 'react';
+import { Phrase } from './types';
 
 const TOPICS = ['Greetings', 'Food', 'Travel', 'Shopping'];
 
-// Mock function to get phrase by id
-const getPhraseById = (id: number): Phrase => ({
-  id,
-  topic: 'Greetings',
-  phrase_native: 'こんにちは',
-  phrase_translation: 'Hello',
-  phonetic: 'Konnichiwa',
-  is_favorite: false,
-  created_at: new Date(),
-});
-
-export default function EditPhraseScreen() {
+export default function AddPhraseScreen() {
   const router = useRouter();
-  const { id } = useLocalSearchParams();
-  const phraseId = typeof id === 'string' ? parseInt(id, 10) : 1;
-
-  // Load phrase data (mock)
   const [topic, setTopic] = useState(TOPICS[0]);
   const [showTopicList, setShowTopicList] = useState(false);
   const [phrase_native, setPhraseNative] = useState('');
   const [phrase_translation, setPhraseTranslation] = useState('');
   const [phonetic, setPhonetic] = useState('');
-
-  useEffect(() => {
-    const phrase = getPhraseById(phraseId);
-    setTopic(phrase.topic);
-    setPhraseNative(phrase.phrase_native);
-    setPhraseTranslation(phrase.phrase_translation);
-    setPhonetic(phrase.phonetic || '');
-  }, [phraseId]);
+  const [is_favorite, setIsFavorite] = useState(false);
 
   const handleSave = () => {
-    // TODO: Save changes to phrase (update in store/db)
+    // TODO: Implement saving the phrase
+    const newPhrase: Phrase = {
+      id: Date.now(),
+      topic,
+      phrase_native,
+      phrase_translation,
+      phonetic: phonetic || undefined,
+      is_favorite,
+      created_at: new Date(),
+    };
     // For now, just go back
     router.back();
   };
@@ -52,7 +39,7 @@ export default function EditPhraseScreen() {
         <TouchableOpacity onPress={() => router.back()}>
           <Text style={styles.appBarAction}>Cancel</Text>
         </TouchableOpacity>
-        <Text style={styles.appBarTitle}>Edit Phrase</Text>
+        <Text style={styles.appBarTitle}>Add Phrase</Text>
         <TouchableOpacity onPress={handleSave}>
           <Text style={styles.appBarAction}>Save</Text>
         </TouchableOpacity>
@@ -129,9 +116,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: '#fff',
-    paddingTop: Platform.OS === 'android' ? 32 : 48,
+    paddingTop: Platform.OS === 'android' ? 16 : 16,
     paddingHorizontal: 16,
-    paddingBottom: 12,
+    paddingBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
     elevation: 2,

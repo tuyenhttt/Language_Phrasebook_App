@@ -1,7 +1,19 @@
+import React from 'react';
 import { Tabs } from 'expo-router';
+import { Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
-export default function TabLayout() {
+export default function RootLayout() {
+  return (
+    <Stack
+      screenOptions={{
+        headerShown: false,
+      }}
+    />
+  );
+}
+
+export function TabLayout() {
   return (
     <Tabs
       screenOptions={{
