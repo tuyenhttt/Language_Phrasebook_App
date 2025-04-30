@@ -9,53 +9,71 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { db } from "../../src/config/firebase";
+import { db, auth } from "../../src/config/firebase";
 import { getFavorites } from "../../src/services/favoriteService";
 import { doc, getDoc } from "firebase/firestore";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useFocusEffect } from "@react-navigation/native";
 
 export default function FavoritesScreen() {
   const router = useRouter();
   const [sections, setSections] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const uid = "sample-user-id"; // Replace with actual logged-in user ID
+  const uid = auth.currentUser?.uid || "";
+
+  const fetchUserFavorites = async () => {
+    try {
+      const favs = await getFavorites(uid);
+      const phraseMap: { [key: string]: any } = {};
+
+      for (const fav of favs) {
+        const phraseDoc = await getDoc(doc(db, "phrases", fav.phraseId));
+        console.log(
+          "Check phraseId:",
+          fav.phraseId,
+          "exists:",
+          phraseDoc.exists()
+        );
+        if (phraseDoc.exists()) {
+          const phraseData = phraseDoc.data();
+          const category =
+            typeof fav.category === "string" ? fav.category : "Unknown";
+          if (!phraseMap[category]) phraseMap[category] = [];
+          phraseMap[category].push({
+            id: fav.phraseId,
+            english: phraseData.english,
+            vietnamese: phraseData.vietnamese,
+          });
+        } else {
+          console.warn("Phrase not found for id:", fav.phraseId);
+        }
+      }
+
+      const formattedSections = Object.entries(phraseMap).map(
+        ([category, data]) => ({
+          topic: category,
+          data,
+        })
+      );
+
+      setSections(formattedSections);
+    } catch (error) {
+      console.error("Error loading favorites:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchUserFavorites = async () => {
-      try {
-        const favs = await getFavorites(uid);
-        const phraseMap: { [key: string]: any } = {};
-
-        for (const fav of favs) {
-          const phraseDoc = await getDoc(doc(db, "phrases", fav.phraseId));
-          if (phraseDoc.exists()) {
-            const phraseData = phraseDoc.data();
-            if (!phraseMap[fav.category]) phraseMap[fav.category] = [];
-            phraseMap[fav.category].push({
-              id: fav.phraseId,
-              phrase: phraseData.phrase, // assuming field is called 'phrase'
-            });
-          }
-        }
-
-        const formattedSections = Object.entries(phraseMap).map(
-          ([category, data]) => ({
-            topic: category,
-            data,
-          })
-        );
-
-        setSections(formattedSections);
-      } catch (error) {
-        console.error("Error loading favorites:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchUserFavorites();
-  }, []);
+  }, [uid]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchUserFavorites();
+    }, [uid])
+  );
 
   if (loading) {
     return (
@@ -90,7 +108,9 @@ export default function FavoritesScreen() {
         )}
         renderItem={({ item }) => (
           <View style={styles.row}>
-            <Text style={styles.phrase}>{item.phrase}</Text>
+            <Text style={styles.phrase}>
+              {item.english} - {item.vietnamese}
+            </Text>
             <Ionicons
               name="star"
               size={22}

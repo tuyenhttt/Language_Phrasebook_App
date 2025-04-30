@@ -1,10 +1,13 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { signOut } from "firebase/auth";
 import { auth } from "../../src/config/firebase";
+import { addFavorite, getFavorites } from "../../src/services/favoriteService";
+import { getDoc, doc } from "firebase/firestore";
+import { db } from "../../src/config/firebase";
 
 export default function TabLayout() {
   const router = useRouter();
@@ -17,6 +20,25 @@ export default function TabLayout() {
       console.error("Error signing out:", error);
     }
   };
+
+  const handleAddFavorite = async (phraseId: string, category: string) => {
+    const uid = auth.currentUser?.uid || "";
+    await addFavorite(uid, phraseId, category);
+  };
+
+  useEffect(() => {
+    const fetchUserFavorites = async () => {
+      const uid = auth.currentUser?.uid || "";
+      console.log("Favorites UID:", uid);
+      const favs = await getFavorites(uid);
+      console.log("Favorites loaded:", favs);
+      for (const fav of favs) {
+        const phraseDoc = await getDoc(doc(db, "phrases", fav.phraseId));
+        console.log("PhraseDoc for", fav.phraseId, ":", phraseDoc.exists());
+      }
+    };
+    fetchUserFavorites();
+  }, []);
 
   return (
     <Tabs
@@ -66,6 +88,16 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="search"
+        options={{
+          title: "Search",
+          headerShown: false,
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="search-outline" size={24} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
           title: "Profile",
@@ -76,14 +108,7 @@ export default function TabLayout() {
           ),
         }}
       />
-      <Tabs.Screen
-        name="search"
-        options={{
-          title: "Search",
-          headerShown: false,
-          tabBarButton: () => null,
-        }}
-      />
+
       <Tabs.Screen
         name="details"
         options={{

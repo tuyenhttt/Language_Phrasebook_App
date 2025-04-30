@@ -17,6 +17,14 @@ import {
   Phrase,
   getPhrases,
 } from "../../app/services/phraseService";
+import { collection, addDoc } from "firebase/firestore";
+import {
+  addFavorite,
+  getFavorites,
+  removeFavorite,
+} from "../../src/services/favoriteService";
+import { auth } from "../../src/config/firebase";
+import { useFocusEffect } from "@react-navigation/native";
 
 interface PhraseWithFavorite extends Phrase {
   is_favorite?: boolean;
@@ -31,30 +39,40 @@ export default function TopicDetailScreen() {
   const [phrases, setPhrases] = useState<PhraseWithFavorite[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const categories = await getCategories();
-        const foundTheme = categories.find(
-          (c: Category) => c.id === categoryId
-        );
-        setTheme(foundTheme || null);
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const categories = await getCategories();
+      const foundTheme = categories.find((c: Category) => c.id === categoryId);
+      setTheme(foundTheme || null);
 
-        if (foundTheme) {
-          const phraseList = await getPhrasesByCategory(categoryId);
-          setPhrases(
-            phraseList.map((phrase) => ({ ...phrase, is_favorite: false }))
-          );
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        Alert.alert("Error", "Failed to load phrases");
+      if (foundTheme) {
+        const phraseList = await getPhrasesByCategory(categoryId);
+        const favs = await getFavorites(auth.currentUser?.uid || "");
+        const favoriteIds = favs.map((f) => f.phraseId);
+        setPhrases(
+          phraseList.map((phrase) => ({
+            ...phrase,
+            is_favorite: favoriteIds.includes((phrase.id || "") + ""),
+          }))
+        );
       }
-      setLoading(false);
-    };
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      Alert.alert("Error", "Failed to load phrases");
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
     fetchData();
   }, [categoryId]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchData();
+    }, [categoryId])
+  );
 
   if (loading) {
     return (
@@ -114,12 +132,46 @@ export default function TopicDetailScreen() {
     }
   };
 
-  const handleToggleFavorite = (phraseId: string) => {
-    setPhrases(
-      phrases.map((p) =>
-        p.id === phraseId ? { ...p, is_favorite: !p.is_favorite } : p
-      )
-    );
+  const handleToggleFavorite = async (phrase: PhraseWithFavorite) => {
+    const uid = auth.currentUser?.uid || "";
+    const category = theme?.title ? theme.title : "Unknown";
+    if (!phrase.is_favorite) {
+      await addFavorite(uid, (phrase.id || "") + "", category);
+      setPhrases(
+        phrases.map((p) =>
+          p.id === phrase.id ? { ...p, is_favorite: true } : p
+        )
+      );
+    } else {
+      setPhrases(
+        phrases.map((p) =>
+          p.id === phrase.id ? { ...p, is_favorite: false } : p
+        )
+      );
+    }
+  };
+
+  const handleToggleAllFavorites = async () => {
+    const uid = auth.currentUser?.uid || "";
+    const category = theme?.title ? theme.title : "Unknown";
+    if (allFavorite) {
+      // Remove all from favorite
+      const favs = await getFavorites(uid);
+      // Lọc ra các favorite thuộc category hiện tại
+      const favsInCategory = favs.filter((fav) => fav.category === category);
+      for (const fav of favsInCategory) {
+        await removeFavorite(fav.id);
+      }
+      setPhrases(phrases.map((p) => ({ ...p, is_favorite: false })));
+    } else {
+      // Add all to favorite
+      for (const phrase of phrases) {
+        if (!phrase.is_favorite) {
+          await addFavorite(uid, (phrase.id || "") + "", category);
+        }
+      }
+      setPhrases(phrases.map((p) => ({ ...p, is_favorite: true })));
+    }
   };
 
   return (
@@ -134,11 +186,7 @@ export default function TopicDetailScreen() {
         <Text style={styles.headerTitle}>{theme.title}</Text>
         <TouchableOpacity
           style={styles.headerIconRight}
-          onPress={() =>
-            setPhrases(
-              phrases.map((p) => ({ ...p, is_favorite: !allFavorite }))
-            )
-          }
+          onPress={handleToggleAllFavorites}
         >
           <Ionicons
             name={allFavorite ? "star" : "star-outline"}
@@ -176,7 +224,7 @@ export default function TopicDetailScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.iconBtn}
-                onPress={() => handleToggleFavorite(item.id!)}
+                onPress={() => handleToggleFavorite(item)}
               >
                 <Ionicons
                   name={item.is_favorite ? "star" : "star-outline"}
