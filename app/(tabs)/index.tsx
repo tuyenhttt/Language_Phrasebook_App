@@ -111,15 +111,15 @@ export default function HomeScreen() {
   ) => {
     // console.log("Delete button clicked for:", categoryTitle); // Debug log
     Alert.alert(
-      "Xóa Topic",
-      `Bạn có chắc chắn muốn xóa topic "${categoryTitle}"? Tất cả các từ vựng trong topic này cũng sẽ bị xóa.`,
+      "Delete Topic",
+      `Are you sure you want to delete topic? "${categoryTitle}"? All vocabulary in this topic will also be deleted.`,
       [
         {
-          text: "Hủy",
+          text: "Cancel",
           style: "cancel",
         },
         {
-          text: "Xóa",
+          text: "Delete",
           style: "destructive",
           onPress: async () => {
             try {
@@ -128,8 +128,8 @@ export default function HomeScreen() {
 
               Toast.show({
                 type: "success",
-                text1: "Thành công",
-                text2: `Đã xóa topic "${categoryTitle}"`,
+                text1: "Success",
+                text2: `Topic deleted "${categoryTitle}"`,
                 position: "bottom",
                 visibilityTime: 2000,
               });
@@ -140,11 +140,11 @@ export default function HomeScreen() {
               console.error("Error deleting topic:", error);
               Toast.show({
                 type: "error",
-                text1: "Lỗi",
+                text1: "Error",
                 text2:
                   error instanceof Error
                     ? error.message
-                    : "Không thể xóa topic",
+                    : "Cannot deleted topic",
                 position: "bottom",
                 visibilityTime: 3000,
               });

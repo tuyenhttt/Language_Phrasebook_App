@@ -5,6 +5,9 @@ export interface User {
   uid: string;
   email: string;
   displayName: string;
+  phone?: string;
+  website?: string;
+  avatar?: string;
   createdAt: Date;
   lastLoginAt: Date;
 }
@@ -82,6 +85,9 @@ export const getUserData = async (uid: string): Promise<User | null> => {
         ...data,
         createdAt: new Date(data.createdAt),
         lastLoginAt: new Date(data.lastLoginAt),
+        phone: data.phone || "",
+        website: data.website || "",
+        avatar: data.avatar || "",
       } as User;
     }
     console.log("No user document found");

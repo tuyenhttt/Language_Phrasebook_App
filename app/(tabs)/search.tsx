@@ -6,6 +6,7 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
+  ScrollView,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { getPhrases, Phrase } from "../../app/services/phraseService";
@@ -85,7 +86,7 @@ export default function SearchScreen() {
         >
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{"Simple Language\nPhrasebook"}</Text>
+        <Text style={styles.headerTitle}>{"Simple Language Phrasebook"}</Text>
         <TouchableOpacity style={styles.headerIcon} onPress={() => {}}>
           <Ionicons name="search" size={22} color="#fff" />
         </TouchableOpacity>
@@ -126,6 +127,7 @@ export default function SearchScreen() {
                 </Text>
               </View>
             }
+            showsVerticalScrollIndicator={false}
           />
         )}
       </View>
@@ -140,17 +142,14 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: "#4169E1",
-    paddingTop: 48,
+    paddingTop: 30,
     paddingBottom: 18,
     paddingHorizontal: 20,
     flexDirection: "row",
     alignItems: "center",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
     shadowColor: "#4169E1",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
-    shadowRadius: 8,
   },
   headerTitle: {
     color: "#fff",

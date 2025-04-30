@@ -1,59 +1,133 @@
-import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  ActivityIndicator,
+  ScrollView,
+  TouchableOpacity,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import { auth } from "../../src/config/firebase";
+import { getUserData, User } from "../../src/services/userService";
 import { useRouter } from "expo-router";
 import { signOut } from "firebase/auth";
-import { auth } from "../../src/config/firebase";
-import { Ionicons } from "@expo/vector-icons";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ProfileScreen() {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  const handleLogout = async () => {
-    Alert.alert("Đăng xuất", "Bạn có chắc chắn muốn đăng xuất?", [
-      {
-        text: "Hủy",
-        style: "cancel",
-      },
-      {
-        text: "Đăng xuất",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await signOut(auth);
-            router.replace("/(auth)/login");
-          } catch (error) {
-            console.error("Error signing out:", error);
-            Alert.alert("Error", "Could not sign out. Please try again.");
-          }
-        },
-      },
-    ]);
+  useEffect(() => {
+    const fetchUser = async () => {
+      if (auth.currentUser?.uid) {
+        const data = await getUserData(auth.currentUser.uid);
+        setUser(data);
+      }
+      setLoading(false);
+    };
+    fetchUser();
+  }, []);
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      router.replace("/(auth)/login");
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
   };
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#4169E1" />
+      </View>
+    );
+  }
+
+  if (!user) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <Text>User not found</Text>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
-      <View style={styles.header}>
-        <Ionicons name="person-circle-outline" size={80} color="#4169E1" />
-        <Text style={styles.email}>{auth.currentUser?.email}</Text>
-      </View>
-
-      <View style={styles.content}>
-        <TouchableOpacity style={styles.menuItem}>
-          <Ionicons name="person-outline" size={24} color="#4169E1" />
-          <Text style={styles.menuText}>Thông tin cá nhân</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.menuItem}>
-          <Ionicons name="settings-outline" size={24} color="#4169E1" />
-          <Text style={styles.menuText}>Cài đặt</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Ionicons name="log-out-outline" size={24} color="#FF3B30" />
-          <Text style={styles.logoutText}>Đăng xuất</Text>
-        </TouchableOpacity>
-      </View>
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+        <View style={styles.header}>
+          <View style={styles.avatarWrapper}>
+            {user.avatar ? (
+              <View style={styles.avatarCircle}>
+                <Text style={styles.avatarText}>
+                  {" "}
+                  {/* You can use Image if avatar is a URL */}
+                  <Ionicons name="person" size={80} color="#fff" />
+                </Text>
+              </View>
+            ) : (
+              <View style={styles.avatarCircle}>
+                <Ionicons name="person" size={80} color="#fff" />
+              </View>
+            )}
+          </View>
+          <Text style={styles.name}>{user.displayName}</Text>
+        </View>
+        <View style={styles.form}>
+          <View style={styles.inputWrapper}>
+            <Text style={styles.label}>Your Email</Text>
+            <View style={styles.inputBox}>
+              <TextInput
+                value={user.email}
+                editable={false}
+                style={styles.input}
+              />
+              <Ionicons name="mail-outline" size={20} color="#aaa" />
+            </View>
+          </View>
+          <View style={styles.inputWrapper}>
+            <Text style={styles.label}>Phone Number</Text>
+            <View style={styles.inputBox}>
+              <TextInput
+                value={user.phone || ""}
+                editable={false}
+                style={styles.input}
+              />
+              <Ionicons name="call-outline" size={20} color="#aaa" />
+            </View>
+          </View>
+          <View style={styles.inputWrapper}>
+            <Text style={styles.label}>Website</Text>
+            <View style={styles.inputBox}>
+              <TextInput
+                value={user.website || ""}
+                editable={false}
+                style={styles.input}
+              />
+              <Ionicons name="globe-outline" size={20} color="#aaa" />
+            </View>
+          </View>
+          <View style={styles.inputWrapper}>
+            <Text style={styles.label}>Password</Text>
+            <View style={styles.inputBox}>
+              <TextInput
+                value={"**********"}
+                editable={false}
+                secureTextEntry
+                style={styles.input}
+              />
+              <Ionicons name="lock-closed-outline" size={20} color="#aaa" />
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+      <TouchableOpacity style={styles.logoutButton} onPress={handleSignOut}>
+        <Text style={styles.logoutButtonText}>Đăng xuất</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
@@ -65,35 +139,78 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: "center",
-    padding: 20,
+    paddingTop: 40,
+    paddingBottom: 20,
+    backgroundColor: "#fff",
   },
-  email: {
-    fontSize: 16,
+  avatarWrapper: {
+    marginBottom: 16,
+  },
+  avatarCircle: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: "#8e7cf0",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  avatarText: {
+    color: "#fff",
+    fontSize: 40,
+    fontWeight: "bold",
+  },
+  name: {
+    fontSize: 24,
+    fontWeight: "bold",
     color: "#333",
-    marginTop: 10,
+    marginTop: 8,
   },
-  content: {
-    padding: 20,
+  job: {
+    fontSize: 16,
+    color: "#888",
+    marginBottom: 8,
   },
-  menuItem: {
+  form: {
+    paddingHorizontal: 24,
+    paddingTop: 10,
+  },
+  inputWrapper: {
+    marginBottom: 18,
+  },
+  label: {
+    fontSize: 14,
+    color: "#888",
+    marginBottom: 6,
+    marginLeft: 4,
+  },
+  inputBox: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 15,
+    backgroundColor: "#f5f5f5",
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
   },
-  menuText: {
-    marginLeft: 15,
+  input: {
+    flex: 1,
     fontSize: 16,
     color: "#333",
+    backgroundColor: "transparent",
+    borderWidth: 0,
+    marginRight: 8,
   },
   logoutButton: {
-    flexDirection: "row",
+    backgroundColor: "#FF3B30",
+    paddingVertical: 14,
+    borderRadius: 12,
+    marginHorizontal: 24,
+    marginBottom: 32,
     alignItems: "center",
-    paddingVertical: 15,
-    marginTop: 20,
+    justifyContent: "center",
   },
-  logoutText: {
-    marginLeft: 15,
-    fontSize: 16,
-    color: "#FF3B30",
+  logoutButtonText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
   },
 });

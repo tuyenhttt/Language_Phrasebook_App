@@ -116,6 +116,18 @@ export default function TabLayout() {
           headerShown: false,
         }}
       />
+      <Tabs.Screen
+        name="Account"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="setting"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }
