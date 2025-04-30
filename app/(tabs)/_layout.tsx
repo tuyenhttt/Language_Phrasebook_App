@@ -29,12 +29,11 @@ export default function TabLayout() {
   useEffect(() => {
     const fetchUserFavorites = async () => {
       const uid = auth.currentUser?.uid || "";
-      console.log("Favorites UID:", uid);
+
       const favs = await getFavorites(uid);
-      console.log("Favorites loaded:", favs);
+
       for (const fav of favs) {
         const phraseDoc = await getDoc(doc(db, "phrases", fav.phraseId));
-        console.log("PhraseDoc for", fav.phraseId, ":", phraseDoc.exists());
       }
     };
     fetchUserFavorites();

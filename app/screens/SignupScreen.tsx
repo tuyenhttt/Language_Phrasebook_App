@@ -19,17 +19,7 @@ export default function SignupScreen() {
   const router = useRouter();
 
   const handleSignup = async () => {
-    console.log("Signup button pressed");
-    console.log("Email:", email);
-    console.log("Password:", password);
-    console.log("Name:", name);
-
     if (!email || !password || !name) {
-      console.log("Missing fields:", {
-        hasEmail: Boolean(email),
-        hasPassword: Boolean(password),
-        hasName: Boolean(name),
-      });
       Alert.alert("Error", "Please fill in all fields");
       return;
     }
@@ -47,19 +37,16 @@ export default function SignupScreen() {
       );
 
       await createUserDocument(userCredential.user.uid, email, name);
-      console.log("User document created successfully");
 
       Alert.alert("Success", "Account created successfully! Please login.", [
         {
           text: "OK",
           onPress: () => {
-            console.log("Navigating to login screen...");
             router.replace("/(auth)/login");
           },
         },
       ]);
     } catch (error: any) {
-      console.error("Error in signup:", error);
       Alert.alert("Error", error.message);
     }
   };
@@ -72,7 +59,6 @@ export default function SignupScreen() {
         placeholder="Name"
         value={name}
         onChangeText={(text) => {
-          console.log("Name changed:", text);
           setName(text);
         }}
       />
@@ -81,7 +67,6 @@ export default function SignupScreen() {
         placeholder="Email"
         value={email}
         onChangeText={(text) => {
-          console.log("Email changed:", text);
           setEmail(text);
         }}
         keyboardType="email-address"
@@ -92,7 +77,6 @@ export default function SignupScreen() {
         placeholder="Password (minimum 6 characters)"
         value={password}
         onChangeText={(text) => {
-          console.log("Password changed:", text);
           setPassword(text);
         }}
         secureTextEntry
@@ -102,7 +86,6 @@ export default function SignupScreen() {
       <TouchableOpacity
         style={styles.button}
         onPress={() => {
-          console.log("Sign up button pressed");
           handleSignup();
         }}
       >

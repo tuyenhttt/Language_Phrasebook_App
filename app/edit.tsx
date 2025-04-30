@@ -11,6 +11,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { useState, useEffect } from "react";
 import { Phrase } from "./types";
 import { getPhrases, updatePhrase } from "./services/phraseService";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const TOPICS = ["Greetings", "Food", "Travel", "Shopping"];
 
@@ -71,86 +72,88 @@ export default function EditPhraseScreen() {
   }
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={styles.container}
-    >
-      {/* Android-style AppBar */}
-      <View style={styles.appBar}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Text style={styles.appBarAction}>Cancel</Text>
-        </TouchableOpacity>
-        <Text style={styles.appBarTitle}>Edit Phrase</Text>
-        <TouchableOpacity onPress={handleSave}>
-          <Text style={styles.appBarAction}>Save</Text>
-        </TouchableOpacity>
-      </View>
+    <SafeAreaView style={{ flex: 1 }}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.container}
+      >
+        {/* Android-style AppBar */}
+        <View style={styles.appBar}>
+          <TouchableOpacity onPress={() => router.back()}>
+            <Text style={styles.appBarAction}>Cancel</Text>
+          </TouchableOpacity>
+          <Text style={styles.appBarTitle}>Edit Phrase</Text>
+          <TouchableOpacity onPress={handleSave}>
+            <Text style={styles.appBarAction}>Save</Text>
+          </TouchableOpacity>
+        </View>
 
-      <View style={styles.form}>
-        {/* Topic Picker */}
-        <Text style={styles.label}>Topic</Text>
-        <TouchableOpacity
-          style={styles.selectInput}
-          onPress={() => setShowTopicList(!showTopicList)}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.selectInputText}>{topic}</Text>
-        </TouchableOpacity>
-        {showTopicList && (
-          <View style={styles.topicList}>
-            {TOPICS.map((t) => (
-              <TouchableOpacity
-                key={t}
-                style={styles.topicListItem}
-                onPress={() => {
-                  setTopic(t);
-                  setShowTopicList(false);
-                }}
-              >
-                <Text
-                  style={[
-                    styles.topicListItemText,
-                    t === topic && { color: "#2563eb", fontWeight: "bold" },
-                  ]}
+        <View style={styles.form}>
+          {/* Topic Picker */}
+          <Text style={styles.label}>Topic</Text>
+          <TouchableOpacity
+            style={styles.selectInput}
+            onPress={() => setShowTopicList(!showTopicList)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.selectInputText}>{topic}</Text>
+          </TouchableOpacity>
+          {showTopicList && (
+            <View style={styles.topicList}>
+              {TOPICS.map((t) => (
+                <TouchableOpacity
+                  key={t}
+                  style={styles.topicListItem}
+                  onPress={() => {
+                    setTopic(t);
+                    setShowTopicList(false);
+                  }}
                 >
-                  {t}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
+                  <Text
+                    style={[
+                      styles.topicListItemText,
+                      t === topic && { color: "#2563eb", fontWeight: "bold" },
+                    ]}
+                  >
+                    {t}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
 
-        {/* Phrase */}
-        <Text style={styles.label}>Phrase</Text>
-        <TextInput
-          style={styles.input}
-          value={phrase_native}
-          onChangeText={setPhraseNative}
-          placeholder="Enter phrase in target language"
-          placeholderTextColor="#888"
-        />
+          {/* Phrase */}
+          <Text style={styles.label}>Phrase</Text>
+          <TextInput
+            style={styles.input}
+            value={phrase_native}
+            onChangeText={setPhraseNative}
+            placeholder="Enter phrase in target language"
+            placeholderTextColor="#888"
+          />
 
-        {/* Translation */}
-        <Text style={styles.label}>Translation</Text>
-        <TextInput
-          style={styles.input}
-          value={phrase_translation}
-          onChangeText={setPhraseTranslation}
-          placeholder="Enter translation"
-          placeholderTextColor="#888"
-        />
+          {/* Translation */}
+          <Text style={styles.label}>Translation</Text>
+          <TextInput
+            style={styles.input}
+            value={phrase_translation}
+            onChangeText={setPhraseTranslation}
+            placeholder="Enter translation"
+            placeholderTextColor="#888"
+          />
 
-        {/* Phonetic */}
-        <Text style={styles.label}>Phonetic</Text>
-        <TextInput
-          style={styles.input}
-          value={phonetic}
-          onChangeText={setPhonetic}
-          placeholder="Enter phonetic (optional)"
-          placeholderTextColor="#888"
-        />
-      </View>
-    </KeyboardAvoidingView>
+          {/* Phonetic */}
+          <Text style={styles.label}>Phonetic</Text>
+          <TextInput
+            style={styles.input}
+            value={phonetic}
+            onChangeText={setPhonetic}
+            placeholder="Enter phonetic (optional)"
+            placeholderTextColor="#888"
+          />
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 

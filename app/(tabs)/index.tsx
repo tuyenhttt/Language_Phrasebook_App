@@ -40,12 +40,11 @@ export default function HomeScreen() {
     setIsLoading(true);
     setError(null);
     try {
-      console.log("Starting to load categories...");
       // Initialize sample data if needed
       await initializeSampleData();
       // Get categories
       const data = await getCategories();
-      console.log("Categories loaded successfully:", data);
+
       setCategories(data);
     } catch (error) {
       console.error("Error in loadCategories:", error);
@@ -109,7 +108,6 @@ export default function HomeScreen() {
     categoryId: string,
     categoryTitle: string
   ) => {
-    // console.log("Delete button clicked for:", categoryTitle); // Debug log
     Alert.alert(
       "Delete Topic",
       `Are you sure you want to delete topic? "${categoryTitle}"? All vocabulary in this topic will also be deleted.`,
@@ -123,7 +121,6 @@ export default function HomeScreen() {
           style: "destructive",
           onPress: async () => {
             try {
-              console.log("Deleting theme:", categoryId); // Debug log
               await deleteTheme(categoryId);
 
               Toast.show({

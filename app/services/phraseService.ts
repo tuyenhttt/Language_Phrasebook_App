@@ -126,32 +126,26 @@ const sampleThemes = [
 
 export const initializeSampleData = async (): Promise<void> => {
   try {
-    console.log("Starting to initialize sample data...");
     const themesSnapshot = await getDocs(themesCollection);
     const phrasesSnapshot = await getDocs(phrasesCollection);
 
     if (themesSnapshot.empty) {
-      console.log("Themes collection is empty, adding sample data...");
       for (const theme of sampleThemes) {
         try {
           const docRef = await addDoc(themesCollection, {
             ...theme,
             createdAt: new Date(),
           });
-          console.log("Added theme document with ID:", docRef.id);
-          console.log("Theme data:", theme);
         } catch (error) {
           console.error("Error adding theme document:", error);
           throw error;
         }
       }
-      console.log("Sample themes added successfully");
     } else {
       console.log("Themes collection already has data");
     }
 
     if (phrasesSnapshot.empty) {
-      console.log("Phrases collection is empty, adding sample data...");
       for (const phrase of samplePhrases) {
         try {
           const docRef = await addDoc(phrasesCollection, phrase);

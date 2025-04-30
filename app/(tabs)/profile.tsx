@@ -126,7 +126,7 @@ export default function ProfileScreen() {
         </View>
       </ScrollView>
       <TouchableOpacity style={styles.logoutButton} onPress={handleSignOut}>
-        <Text style={styles.logoutButtonText}>Đăng xuất</Text>
+        <Text style={styles.logoutButtonText}>Log out</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );

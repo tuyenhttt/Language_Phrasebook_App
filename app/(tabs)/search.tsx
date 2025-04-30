@@ -142,8 +142,8 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: "#4169E1",
-    paddingTop: 30,
-    paddingBottom: 18,
+    paddingTop: 55,
+    paddingBottom: 20,
     paddingHorizontal: 20,
     flexDirection: "row",
     alignItems: "center",
@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     color: "#fff",
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: "700",
     flex: 1,
     textAlign: "center",

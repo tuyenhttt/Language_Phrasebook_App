@@ -11,18 +11,16 @@ const useProtectedRoute = () => {
   const router = useRouter();
 
   useEffect(() => {
-    console.log("Setting up auth state listener");
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       const inAuthGroup = segments[0] === "(auth)";
-      console.log("Auth state changed:", { user: user?.email, inAuthGroup });
 
       if (!user && !inAuthGroup) {
         // Nếu chưa đăng nhập và không ở màn hình auth, chuyển đến login
-        console.log("User not authenticated, redirecting to login");
+
         router.replace("/(auth)/login");
       } else if (user && inAuthGroup) {
         // Nếu đã đăng nhập và đang ở màn hình auth, chuyển đến home
-        console.log("User authenticated, redirecting to home");
+
         router.replace("/(tabs)");
       }
     });
