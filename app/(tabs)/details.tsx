@@ -16,6 +16,7 @@ import {
   Category,
   Phrase,
   getPhrases,
+  deletePhrase,
 } from "../../app/services/phraseService";
 import { collection, addDoc } from "firebase/firestore";
 import {
@@ -100,7 +101,15 @@ export default function TopicDetailScreen() {
     });
   };
 
-  const handleDelete = (phraseId: string) => {
+  const handleDelete = async (phraseId: string) => {
+    const deleteAndRefresh = async () => {
+      try {
+        await deletePhrase(phraseId);
+        setPhrases((prev) => prev.filter((p) => p.id !== phraseId));
+      } catch (error) {
+        Alert.alert("Error", "Failed to delete phrase");
+      }
+    };
     if (Platform.OS === "ios") {
       Alert.alert("Are you sure you want to delete this phrase?", "", [
         {
@@ -109,7 +118,7 @@ export default function TopicDetailScreen() {
         },
         {
           text: "Yes",
-          onPress: () => setPhrases(phrases.filter((p) => p.id !== phraseId)),
+          onPress: deleteAndRefresh,
           style: "destructive",
         },
       ]);
@@ -124,7 +133,7 @@ export default function TopicDetailScreen() {
           },
           {
             text: "Delete",
-            onPress: () => setPhrases(phrases.filter((p) => p.id !== phraseId)),
+            onPress: deleteAndRefresh,
             style: "destructive",
           },
         ]

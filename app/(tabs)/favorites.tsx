@@ -29,12 +29,7 @@ export default function FavoritesScreen() {
 
       for (const fav of favs) {
         const phraseDoc = await getDoc(doc(db, "phrases", fav.phraseId));
-        console.log(
-          "Check phraseId:",
-          fav.phraseId,
-          "exists:",
-          phraseDoc.exists()
-        );
+
         if (phraseDoc.exists()) {
           const phraseData = phraseDoc.data();
           const category =
